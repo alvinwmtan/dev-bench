@@ -17,19 +17,22 @@ class DevBenchDataset(Dataset):
       paths to any images
     """
     def __init__(self, dataset_folder, manifest_file="manifest.csv"):
+        self.dataset_folder = dataset_folder
         self.manifest = pd.read_csv(os.path.join(dataset_folder, manifest_file))
         self.num_image_cols = len([c for c in self.manifest.columns if re.compile("image[0-9]").match(c)])
         self.num_text_cols = len([c for c in self.manifest.columns if re.compile("text[0-9]").match(c)])
-        for i in range(1, self.num_image_cols+1):
-            self.manifest[f"image{i}"] = [Image.open(dataset_folder+img) for img in self.manifest[f"image{i}"]]
-
+    
     def __len__(self):
         return len(self.manifest)
 
     def __getitem__(self, idx):
         row = self.manifest.iloc[idx]
-        images = list(row[[f"image{i}" for i in range(1, self.num_image_cols+1)]])
-        texts = list(row[[f"text{i}" for i in range(1, self.num_text_cols+1)]])
+        images = []
+        for i in range(1, self.num_image_cols + 1):
+            image_path = os.path.join(self.dataset_folder, row[f"image{i}"])
+            with Image.open(image_path).convert('RGB') as img:
+                images.append(img.copy())  # Copy the image data to memory
+        texts = [row[f"text{i}"] for i in range(1, self.num_text_cols + 1)]
         return {"images": images, "text": texts}
 
 def collator(batch):
