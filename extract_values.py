@@ -213,3 +213,180 @@ def get_all_text_feats_bridgewater(dataloader, processor, model):
             feats = outputs.logits[:, 0].detach().numpy()  # Adjust indexing if necessary
             all_feats.append(feats)
     return np.concatenate(all_feats, axis=0)
+
+
+def get_all_sim_scores_cvcl(dataloader, preprocess, model):
+    """
+    Gets image--text similarity scores from a dataloader using the MultiModalLitModel
+    -----
+    Inputs:
+    - dataloader: a dataloader constructed from a DevBenchDataset
+    - processor: the appropriate input processor for the model
+    - model: the MultiModalLitModel
+    Outputs:
+    - a numpy array of shape [num_trials, num_images_per_trial, num_texts_per_trial]
+    """
+    all_sims = []
+    with torch.no_grad():
+        for d in dataloader:
+            # Process images
+            images = [preprocess(img) for img in d["images"]]
+            images = torch.stack(images).to(model.device)
+            image_features = model.encode_image(images)
+
+            # Tokenize and encode texts
+            texts, texts_len = model.tokenize(d["text"])
+            texts, texts_len = texts.to(model.device), texts_len.to(model.device)
+            text_features = model.encode_text(texts, texts_len)
+
+            # Get logits for image-text pairs
+            logits_per_image, logits_per_text = model(images, texts, texts_len)
+            sims = logits_per_image.detach().cpu().numpy()
+            all_sims.append(sims)
+    return np.stack(all_sims, axis=0)
+
+def get_all_sim_scores_vilt(dataloader, processor, model):
+    """
+    Gets image--text similarity scores from a dataloader using Bridge Tower model
+    -----
+    Inputs:
+    - dataloader: a dataloader constructed from a DevBenchDataset
+    - processor: the BridgeTowerProcessor
+    - model: the BridgeTowerModel
+    Outputs:
+    - a numpy array of shape [num_trials, num_images_per_trial, num_texts_per_trial]
+    """
+    all_sims = []
+    with torch.no_grad():
+        for d in dataloader:
+            # Prepare inputs with padding and truncation
+            # Assuming each data point in the dataloader has multiple images and texts
+            num_images = len(d["images"])
+            num_texts = len(d["text"])
+            sims = np.zeros((num_images, num_texts))
+
+            for i, image in enumerate(d["images"]):
+                #print(image)
+                if image.mode != 'RGB':
+                    image = image.convert('RGB')
+                #print(image.mode)
+                scores = {}
+                for j, text in enumerate(d["text"]):
+                    # Prepare inputs for each image-text pair
+                    #inputs = processor(images=image, text=text, return_tensors="pt", padding=True, truncation=True)
+                    encoding = processor(image, text, return_tensors="pt")
+                    # Forward pass
+                    outputs = model(**encoding)
+                    scores[text] = outputs.logits[0, :].item()
+                    sims[i, j] = scores[text]
+
+            # Append the similarity scores for this batch to all_sims
+            all_sims.append(sims)
+    
+    return np.stack(all_sims, axis=0)
+
+from tqdm import tqdm 
+
+from PIL import Image
+
+import torch
+import numpy as np
+
+def get_all_image_feats_bridgewater(dataloader, processor, model):
+    """
+    Gets image embeddings from a dataloader using a model that outputs embeddings.
+    
+    Inputs:
+    - dataloader: a dataloader constructed from a DevBenchDataset
+    - processor: the appropriate input processor for the model
+    - model: the model used to extract image embeddings
+    
+    Outputs:
+    - a numpy array of shape [num_images, embed_dim]
+    """
+    all_feats = []
+    with torch.no_grad():
+        for d in dataloader:
+            # Process each image individually
+            for image in d["images"]:
+                # Convert image to RGB if not already in that format
+                if image.mode != 'RGB':
+                    image = image.convert('RGB')
+                
+                # Pass a blank text to satisfy model requirements
+                inputs = processor(images=[image], text=[""], return_tensors="pt", padding=True, truncation=True)
+                
+                # Model inference
+                outputs = model(**inputs)
+                
+                # Extract image features
+                image_features = outputs.image_features  # Shape: (batch_size, image_sequence_length, hidden_size)
+                
+                # Average pooling over the sequence length dimension to get (batch_size, hidden_size)
+                pooled_feats = image_features.mean(dim=1).squeeze().detach().numpy()
+                #print(pooled_feats.shape)
+                # Ensure the feature dimension is as expected and add to the list
+                if len(pooled_feats.shape) == 1:  # When batch_size is 1
+                    all_feats.append(pooled_feats)
+                elif len(pooled_feats.shape) == 2:  # General case
+                    all_feats.extend(pooled_feats)
+                else:
+                    print(f"Unexpected shape of pooled features: {pooled_feats.shape}")
+    
+    return np.array(all_feats)
+
+
+def get_all_image_feats_flava(dataloader, fe, model):
+    """
+    Gets image features from a dataloader and applies mean pooling to each set of image features.
+    -----
+    Inputs:
+    - dataloader: a dataloader constructed from a DevBenchDataset
+    - fe: the feature extractor
+    - model: the model used to extract image features
+    Outputs:
+    - a numpy array of shape [num_images, embed_dim] after mean pooling
+    """
+    all_feats = []
+    with torch.no_grad():
+        for d in dataloader:
+            images_rgb = [image.convert("RGB") for image in d["images"]]
+            image_input = fe(images_rgb, return_tensors="pt")
+            feats = model.get_image_features(**image_input).detach().numpy()
+            mean_feats = np.mean(feats, axis=1)  # Mean pooling across the patches
+            all_feats.append(mean_feats)
+    return np.concatenate(all_feats, axis=0)
+
+
+
+def get_all_image_feats_cvcl(dataloader, preprocess, model):
+    """
+    Gets image features from a dataloader
+    -----
+    Inputs:
+    - dataloader: a dataloader constructed from a DevBenchDataset
+    - processor: the appropriate input processor for the model
+    - model: the model used to extract image features
+    - device: torch device (cuda or cpu)
+    Outputs:
+    - a numpy array of shape [num_images, embed_dim]
+    """
+    all_feats = []
+    model.eval()
+    with torch.no_grad():
+        for d in dataloader:
+            # Process the images with the processor
+            images = [preprocess(img.convert("RGB")) for img in d["images"]]
+            images = torch.stack(images).to(model.device)
+            image_features = model.encode_image(images)
+            print(image_features.shape)
+            #processed_inputs = processor(images=d["images"], return_tensors="pt")
+            #pixel_values = processed_inputs["pixel_values"]
+            
+            # Get image features using model's encode_image method
+            #image_features = model.encode_image(pixel_values).detach().numpy()
+            
+            # Append features to the list
+            all_feats.append(image_features)
+    
+    return np.concatenate(all_feats, axis=0)
