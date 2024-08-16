@@ -6,8 +6,9 @@ parser = argparse.ArgumentParser(description='Evaluate a model on DevBench tasks
 parser.add_argument('model', type=str, help='model type')
 args = parser.parse_args()
 
-# Load model
+# # Load model
 model_type = args.model # "clip_base"
+
 
 if model_type == "clip_base":
     from model_classes.clip import ClipEvalModel
@@ -103,22 +104,43 @@ elif model_type == "llava":
     model = AutoModelForPreTraining.from_pretrained("llava-hf/llava-v1.6-mistral-7b-hf"))
 
 elif model_type == "tinyllava":
-    from transformers import AutoProcessor, AutoModelForPreTraining
+    from transformers import AutoModelForCausalLM, AutoTokenizer
     from model_classes.tinyllava import TinyLlavaEvalModel
-    eval_model = TinyLlavaEvalModel(processor = AutoProcessor.from_pretrained("bczhou/tiny-llava-v1-hf"),
-model = AutoModelForPreTraining.from_pretrained("bczhou/tiny-llava-v1-hf"))
+    eval_model = TinyLlavaEvalModel(
+        tokenizer = AutoTokenizer.from_pretrained('tinyllava/TinyLLaVA-Phi-2-SigLIP-3.1B'),
+        model = AutoModelForCausalLM.from_pretrained("tinyllava/TinyLLaVA-Phi-2-SigLIP-3.1B", trust_remote_code=True)
+    )
+    
+elif model_type == "kosmos":
+    from model_classes.kosmos import Kosmos2EvalModel
+    from transformers import AutoProcessor, Kosmos2ForConditionalGeneration
+    eval_model = Kosmos2EvalModel(model = Kosmos2ForConditionalGeneration.from_pretrained("microsoft/kosmos-2-patch14-224"),
+processor = AutoProcessor.from_pretrained("microsoft/kosmos-2-patch14-224"))
+    
+elif model_type == "cogvlm":
+    from transformers import AutoModelForCausalLM, LlamaTokenizer
+    from model_classes.cogvlm import CogVlmEvalModel
+    import torch
+    eval_model = CogVlmEvalModel(tokenizer = LlamaTokenizer.from_pretrained('lmsys/vicuna-7b-v1.5'),
+                                 model = AutoModelForCausalLM.from_pretrained(
+    'THUDM/cogvlm-grounding-generalist-hf',
+    torch_dtype=torch.bfloat16,
+    low_cpu_mem_usage=True,
+    trust_remote_code=True
+).to('cuda').eval())
+
 
 else:
     raise Exception(f"No implementation found for model '{model_type}'")
 
 
 
-# Lexical tasks
-lwl_ds = data_handling.DevBenchDataset("assets/lex-lwl/")
-lwl_dl = data_handling.make_dataloader(lwl_ds)
-print("getting all sim scores lwl")
-lwl_sims = eval_model.get_all_sim_scores(lwl_dl)
-np.save(f"evals/lex-lwl/lwl_{model_type}.npy", lwl_sims)
+#Lexical tasks
+# lwl_ds = data_handling.DevBenchDataset("assets/lex-lwl/")
+# lwl_dl = data_handling.make_dataloader(lwl_ds)
+# print("getting all sim scores lwl")
+# lwl_sims = eval_model.get_all_sim_scores(lwl_dl)
+# np.save(f"evals/lex-lwl/lwl_{model_type}.npy", lwl_sims)
 
 
 vv_ds = data_handling.DevBenchDataset("assets/lex-viz_vocab/")
@@ -137,7 +159,7 @@ wg_dl = data_handling.make_dataloader(wg_ds)
 wg_sims = eval_model.get_all_sim_scores(wg_dl)
 np.save(f"evals/gram-winoground/wg_{model_type}.npy", wg_sims)
 
-#Semantic tasks
+# Semantic tasks
 # voc_ds = data_handling.DevBenchDataset("assets/sem-viz_obj_cat/")
 # voc_dl = data_handling.make_dataloader(voc_ds)
 # voc_embeds = eval_model.get_all_image_feats(voc_dl)
