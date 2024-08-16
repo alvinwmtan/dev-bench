@@ -31,7 +31,7 @@ get_human_data_voc <- function(data_loc = "assets/sem-viz_obj_cat/original/Matri
   saveRDS(human_data_voc, cached_file)
 }
 
-human_data_voc <- get_human_data_voc
+human_data_voc <- get_human_data_voc()
 
 # clip_4mo_cor <- rsa(mat_4mo_mean, clip)
 # clip_10mo_cor <- rsa(mat_10mo_mean, clip)

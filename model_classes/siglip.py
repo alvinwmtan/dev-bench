@@ -32,8 +32,7 @@ class SiglipEvalModel(EvalModel):
                 inputs = self.tokenizer(d['text'], padding = "max_length", return_tensors = "pt")
                 text_features = self.model_embed.get_text_features(**inputs)
                 all_feats.append(text_features)
-        return np.concatenate(all_feats, axis = 0)
-    
+        return np.concatenate(all_feats, axis=0)
 
     def get_all_sim_scores(self, dataloader):
         all_sims = []

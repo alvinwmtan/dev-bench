@@ -74,9 +74,13 @@ ggsave("comparison/gram-trog-oc.png",
 trog_files <- c(list.files("evals/gram-trog", pattern = "*.npy"), "openclip/openclip_epoch_256.npy")
 
 other_res_trog <- lapply(trog_files, \(trogf) {
-  res <- np$load(here("evals/gram-trog", trogf)) |> 
-    as_tibble()
+  res <- np$load(here("evals/gram-trog", trogf))  |> 
+    drop()
+  if (length(dim(res)) == 3) {
+    res <- (res[,,1] - res[,,2])
+  }
   res <- res |> 
+    as_tibble() |> 
     `colnames<-`(value = c("image1", "image2", "image3", "image4")) |> 
     mutate(trial = seq_along(image1))
   acc <- res |> 
@@ -89,10 +93,12 @@ other_res_trog <- lapply(trog_files, \(trogf) {
 }) |> bind_rows() |> 
   mutate(model = str_replace_all(model, model_rename))
 
+write_csv(other_res_trog, "other_res_trog.csv")
+
 trog_all <- ggplot(other_res_trog, 
                    aes(x = accuracy, y = kl, shape = model)) + 
   geom_point() + 
-  scale_shape_manual(values = c(16, 1, 17, 15, 18, 0, 2, 3)) +
+  scale_shape_manual(values = c(16, 1, 17, 15, 18, 0, 4, 3, 5, 2)) +
   # theme_classic() +
   labs(x = "Accuracy",
        y = TeX("Model–human dissimilarity ($D^*_{KL}$)"),

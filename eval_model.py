@@ -68,8 +68,6 @@ class EvalModel():
         all_sims = []
         with torch.no_grad():
             for d in tqdm(dataloader, desc="Processing data"):
-		# inputs = self.processor(images=d["images"], return_tensors="pt").to(self.device)
-                # images_tensor = torch.stack(d["images"]).to(self.device)
                 inputs = self.processor(images=d["images"], text=d["text"], 
                                         return_tensors="pt", padding=True)
                 sims = self.get_similarity_scores(**inputs).detach().numpy()

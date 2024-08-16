@@ -139,8 +139,12 @@ vv_files <- c(list.files("evals/lex-viz_vocab", pattern = "*.npy"), "openclip/op
 
 other_res_vv <- lapply(vv_files, \(vvf) {
   res <- np$load(here("evals/lex-viz_vocab", vvf)) |> 
-    as_tibble()
+    drop()
+  if (length(dim(res)) == 3) {
+    res <- (res[,,1] - res[,,2])
+  }
   res <- res |> 
+    as_tibble() |> 
     `colnames<-`(value = c("image1", "image2", "image3", "image4")) |> 
     mutate(trial = seq_along(image1))
   acc <- res |> 
@@ -153,12 +157,14 @@ other_res_vv <- lapply(vv_files, \(vvf) {
 }) |> bind_rows() |> 
   mutate(model = str_replace_all(model, model_rename))
 
+write_csv(other_res_vv, "other_res_vv.csv")
+
 vv_all <- ggplot(other_res_vv |> mutate(age_bin = as.factor(age_bin) |> fct_recode(A = "25")), 
                  aes(x = accuracy, y = kl, col = age_bin, shape = model)) + 
   geom_point() + 
   geom_line(aes(group = as.factor(age_bin)), 
             method = "lm", stat = "smooth", alpha = .7) + 
-  scale_shape_manual(values = c(16, 1, 17, 15, 3, 0, 18, 2)) +
+  scale_shape_manual(values = c(16, 1, 17, 15, 18, 0, 4, 3, 5, 2)) +
   # theme_classic() +
   labs(x = "Accuracy",
        y = TeX("Model–human dissimilarity ($D^*_{KL}$)"),

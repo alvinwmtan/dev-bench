@@ -92,8 +92,12 @@ wg_files <- c(list.files("evals/gram-winoground", pattern = "*.npy"), "openclip/
 
 other_res_wg <- lapply(wg_files, \(wgf) {
   res <- np$load(here("evals/gram-winoground", wgf)) |> 
-    as_tibble()
+    drop()
+  if (dim(res)[2] == 4) {
+    res <- (res[,,1] - res[,,2])
+  }
   res <- res |> 
+    as_tibble() |> 
     `colnames<-`(value = c("image1text1", "image2text1", "image1text2", "image2text2")) |> 
     mutate(trial = seq_along(image1text1))
   acc <- res |> 
@@ -105,6 +109,8 @@ other_res_wg <- lapply(wg_files, \(wgf) {
            accuracy = acc)
 }) |> bind_rows() |> 
   mutate(model = str_replace_all(model, model_rename))
+
+write_csv(other_res_wg, "other_res_wg.csv")
 
 wg_all <- ggplot(other_res_wg, 
                  aes(x = accuracy, y = kl, shape = model)) + 
