@@ -90,10 +90,7 @@ elif model_type == "siglip":
 
     eval_model = SiglipEvalModel(
         model = AutoModel.from_pretrained("google/siglip-so400m-patch14-384"),
-        processor = AutoProcessor.from_pretrained("google/siglip-so400m-patch14-384"),
-        model_embed = AutoModel.from_pretrained("google/siglip-base-patch16-224"),
-        tokenizer = AutoTokenizer.from_pretrained("google/siglip-base-patch16-224"),
-        processor_embed = AutoProcessor.from_pretrained("google/siglip-base-patch16-224")
+        processor = AutoProcessor.from_pretrained("google/siglip-so400m-patch14-384")
     )
     print("loaded siglip model")
 
@@ -129,6 +126,14 @@ elif model_type == "cogvlm":
     trust_remote_code=True
 ).to('cuda').eval())
 
+elif model_type == "moondream":
+    from model_classes.moondream import MoondreamEvalModel
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    import torch
+    eval_model = MoondreamEvalModel(tokenizer = AutoTokenizer.from_pretrained("vikhyatk/moondream2", revision="2024-05-20"),
+                                 model = AutoModelForCausalLM.from_pretrained(
+            "vikhyatk/moondream2",  revision="2024-05-20"
+        ).eval())
 
 else:
     raise Exception(f"No implementation found for model '{model_type}'")
@@ -136,11 +141,11 @@ else:
 
 
 #Lexical tasks
-# lwl_ds = data_handling.DevBenchDataset("assets/lex-lwl/")
-# lwl_dl = data_handling.make_dataloader(lwl_ds)
-# print("getting all sim scores lwl")
-# lwl_sims = eval_model.get_all_sim_scores(lwl_dl)
-# np.save(f"evals/lex-lwl/lwl_{model_type}.npy", lwl_sims)
+lwl_ds = data_handling.DevBenchDataset("assets/lex-lwl/")
+lwl_dl = data_handling.make_dataloader(lwl_ds)
+print("getting all sim scores lwl")
+lwl_sims = eval_model.get_all_sim_scores(lwl_dl)
+np.save(f"evals/lex-lwl/lwl_{model_type}.npy", lwl_sims)
 
 
 vv_ds = data_handling.DevBenchDataset("assets/lex-viz_vocab/")
@@ -159,18 +164,18 @@ wg_dl = data_handling.make_dataloader(wg_ds)
 wg_sims = eval_model.get_all_sim_scores(wg_dl)
 np.save(f"evals/gram-winoground/wg_{model_type}.npy", wg_sims)
 
-# Semantic tasks
-# voc_ds = data_handling.DevBenchDataset("assets/sem-viz_obj_cat/")
-# voc_dl = data_handling.make_dataloader(voc_ds)
-# voc_embeds = eval_model.get_all_image_feats(voc_dl)
-# np.save(f"evals/sem-viz_obj_cat/voc_{model_type}.npy", voc_embeds)
+#Semantic tasks
+voc_ds = data_handling.DevBenchDataset("assets/sem-viz_obj_cat/")
+voc_dl = data_handling.make_dataloader(voc_ds)
+voc_embeds = eval_model.get_all_image_feats(voc_dl)
+np.save(f"evals/sem-viz_obj_cat/voc_{model_type}.npy", voc_embeds)
 
-# things_ds = data_handling.DevBenchDataset("assets/sem-things/")
-# things_dl = data_handling.make_dataloader(things_ds)
-# things_embeds = eval_model.get_all_image_feats(things_dl)
-# np.save(f"evals/sem-things/things_{model_type}.npy", things_embeds)
+things_ds = data_handling.DevBenchDataset("assets/sem-things/")
+things_dl = data_handling.make_dataloader(things_ds)
+things_embeds = eval_model.get_all_image_feats(things_dl)
+np.save(f"evals/sem-things/things_{model_type}.npy", things_embeds)
 
-# wat_ds = data_handling.DevBenchDataset("assets/sem-wat/")
-# wat_dl = data_handling.make_dataloader(wat_ds)
-# wat_embeds = eval_model.get_all_text_feats(wat_dl)
-# np.save(f"evals/sem-wat/wat_{model_type}.npy", wat_embeds)
+wat_ds = data_handling.DevBenchDataset("assets/sem-wat/")
+wat_dl = data_handling.make_dataloader(wat_ds)
+wat_embeds = eval_model.get_all_text_feats(wat_dl)
+np.save(f"evals/sem-wat/wat_{model_type}.npy", wat_embeds)
