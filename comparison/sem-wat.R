@@ -147,6 +147,8 @@ other_res_wat <- lapply(wat_files, \(watf) {
 }) |> bind_rows() |> 
   mutate(model = str_replace_all(model, model_rename))
 
+write_csv(other_res_wat, "other_res_wat.csv")
+
 wat_all <- ggplot(other_res_wat |> filter(!is.na(kl)),
                   aes(x = fct_reorder(model, desc(kl)), y = kl, fill = as.factor(age))) + 
   geom_col(position = "dodge") + 

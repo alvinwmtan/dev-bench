@@ -45,6 +45,7 @@ get_human_data_lwl <- function(
     count(aoi) |> 
     mutate(prop = n / sum(n),
            age_bin = 1.5) |> 
+    filter(aoi == "target") |> 
     group_by(age_bin, target_image) |> 
     summarise(prop = mean(prop)) |> 
     mutate(image1 = glue("images_adams/{target_image}.png") |> 
@@ -156,8 +157,12 @@ lwl_files <- c(list.files("evals/lex-lwl", pattern = "*.npy"), "openclip/opencli
 
 other_res_lwl <- lapply(lwl_files, \(lwlf) {
   res <- np$load(here("evals/lex-lwl", lwlf)) |> 
-    as_tibble()
+    drop()
+  if (length(dim(res)) == 3) {
+    res <- (res[,,1] - res[,,2])
+  }
   res <- res |> 
+    as_tibble() |> 
     `colnames<-`(value = c("image1", "image2")) |> 
     mutate(trial = seq_along(image1))
   acc <- res |>
@@ -170,10 +175,12 @@ other_res_lwl <- lapply(lwl_files, \(lwlf) {
 }) |> bind_rows() |> 
   mutate(model = str_replace_all(model, model_rename))
 
+write_csv(other_res_lwl, "other_res_lwl.csv")
+
 lwl_all <- ggplot(other_res_lwl, 
                   aes(x = accuracy, y = kl, col = as.factor(age_bin), shape = model)) + 
   geom_point() + 
-  scale_shape_manual(values = c(16, 1, 17, 15, 18, 0, 2, 3)) +
+  scale_shape_manual(values = c(16, 1, 17, 15, 18, 0, 4, 3, 5, 2)) +
   # theme_classic() +
   labs(x = "Accuracy",
        y = TeX("Model–human dissimilarity ($D^*_{KL}$)"),

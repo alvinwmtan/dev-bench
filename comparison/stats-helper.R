@@ -12,7 +12,13 @@ model_rename <- c("blip" = "BLIP",
                   "cvcl" = "CVCL",
                   "flava" = "FLAVA",
                   "openclip/openclip_epoch_256" = "OpenCLIP",
-                  "vilt" = "ViLT")
+                  "vilt" = "ViLT",
+                  "siglip" = "SigLIP",
+                  "openclip_random" = "Random (OpenCLIP)",
+                  "kosmos" = "Kosmos-2",
+                  "llava" = "LLaVA",
+                  "tiny" = "Tiny",
+                  "cogvlm" = "CogVLM")
 model_feats <- read_csv("model_feat_vals.csv")
 size_fix <- c("K" = "e3",
               "M" = "e6",

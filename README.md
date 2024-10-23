@@ -15,9 +15,9 @@ For attribution and licensing reasons, not all assets and data are hosted within
 
 **(Lexical) Looking While Listening:** Assets are available in this repo. Assets from Adams et al. (2018) and Frank et al. (2016) were directly obtained from the original papers, while assets from Donnelly & Kidd (2021) were reconstructed to ensure licensing at least as permissible as CC-BY-NC-SA. Data are available in this repo; they were aggregated from data in the original papers.
 
-**(Lexical) Visual Vocabulary:** Assets are available from [OSF](https://osf.io/j3mn2/) (these are the same images as in the THINGS similarity task). Data are under embargo and will be released soon.
+**(Lexical) Visual Vocabulary:** Assets are available from [OSF](https://osf.io/j3mn2/) (these are the same images as in the THINGS similarity task). Data are available in this repo.
 
-**(Grammatical) Test of Reception of Grammar:** Assets can be downloaded from the [LEVANTE repo](https://github.com/levante-framework/core-tasks/tree/main/assets/TROG/original) by running `sh assets/gram-trog/trog_dl.sh`. Data are under embargo and will be released soon.
+**(Grammatical) Test of Reception of Grammar:** Assets can be downloaded from the [LEVANTE repo](https://github.com/levante-framework/core-tasks/tree/main/assets/TROG/original) by running `sh assets/gram-trog/trog_dl.sh`. Data are available in this repo.
 
 **(Grammatical) Winoground:** Assets can be downloaded from [Hugging Face](https://huggingface.co/datasets/facebook/winoground/tree/main/data); download and unzip `images.zip` into `assets/gram-winoground/images`. Data can be downloaded from [Hugging Face](https://huggingface.co/datasets/facebook/winoground/blob/main/statistics/model_scores/human.jsonl); this should go into `evals/gram-winoground`. 
 

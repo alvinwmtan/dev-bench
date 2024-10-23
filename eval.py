@@ -86,19 +86,18 @@ elif model_type == "cvcl":
 elif model_type == "siglip":
     from model_classes.siglip import SiglipEvalModel
     from transformers import AutoProcessor, AutoModel, AutoTokenizer
-    print("loading siglip model")
-
     eval_model = SiglipEvalModel(
         model = AutoModel.from_pretrained("google/siglip-so400m-patch14-384"),
         processor = AutoProcessor.from_pretrained("google/siglip-so400m-patch14-384")
     )
-    print("loaded siglip model")
 
 elif model_type == "llava":
     from model_classes.llava import LlavaEvalModel
     from transformers import AutoProcessor, AutoModelForPreTraining
-    eval_model = LlavaEvalModel(processor = AutoProcessor.from_pretrained("llava-hf/llava-v1.6-mistral-7b-hf"),
-    model = AutoModelForPreTraining.from_pretrained("llava-hf/llava-v1.6-mistral-7b-hf"))
+    eval_model = LlavaEvalModel(
+        processor = AutoProcessor.from_pretrained("llava-hf/llava-v1.6-mistral-7b-hf"),
+        model = AutoModelForPreTraining.from_pretrained("llava-hf/llava-v1.6-mistral-7b-hf")
+    )
 
 elif model_type == "tinyllava":
     from transformers import AutoModelForCausalLM, AutoTokenizer
