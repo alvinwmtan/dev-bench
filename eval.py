@@ -154,24 +154,24 @@ else:
 # Lexical tasks
 lwl_ds = data_handling.DevBenchDataset("assets/lex-lwl/")
 lwl_dl = data_handling.make_dataloader(lwl_ds)
-lwl_sims = eval_model.get_all_sim_scores_rating(lwl_dl)
-np.save(f"evals/lex-lwl/lwl_rating_{model_type}.npy", lwl_sims)
+lwl_sims = eval_model.get_all_sim_scores(lwl_dl)
+np.save(f"evals/lex-lwl/lwl_{model_type}.npy", lwl_sims)
 
 vv_ds = data_handling.DevBenchDataset("assets/lex-viz_vocab/")
 vv_dl = data_handling.make_dataloader(vv_ds)
-vv_sims = eval_model.get_all_sim_scores_rating(vv_dl)
-np.save(f"evals/lex-viz_vocab/vv_rating_{model_type}.npy", vv_sims)
+vv_sims = eval_model.get_all_sim_scores(vv_dl)
+np.save(f"evals/lex-viz_vocab/vv_{model_type}.npy", vv_sims)
 
 # Grammatical tasks
 trog_ds = data_handling.DevBenchDataset("assets/gram-trog/")
 trog_dl = data_handling.make_dataloader(trog_ds)
-trog_sims = eval_model.get_all_sim_scores_rating(trog_dl)
-np.save(f"evals/gram-trog/trog_rating_{model_type}.npy", trog_sims)
+trog_sims = eval_model.get_all_sim_scores(trog_dl)
+np.save(f"evals/gram-trog/trog_{model_type}.npy", trog_sims)
 
 wg_ds = data_handling.DevBenchDataset("assets/gram-winoground/")
 wg_dl = data_handling.make_dataloader(wg_ds)
-wg_sims = eval_model.get_all_sim_scores_rating(wg_dl)
-np.save(f"evals/gram-winoground/wg_rating_{model_type}.npy", wg_sims)
+wg_sims = eval_model.get_all_sim_scores(wg_dl)
+np.save(f"evals/gram-winoground/wg_{model_type}.npy", wg_sims)
 
 # Semantic tasks
 voc_ds = data_handling.DevBenchDataset("assets/sem-viz_obj_cat/")
