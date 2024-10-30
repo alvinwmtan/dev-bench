@@ -44,4 +44,13 @@ ft_full <- (ft_mean | vv_all + ggtitle("VV")) +
   plot_annotation(tag_levels = 'a') & 
   theme(plot.tag = element_text(face = "bold"))
 ggsave("feats_full.png", plot = ft_full, width = 2800, height = 950, unit = "px")
-  
+
+# feats_gen <- read_csv("gen_acc.csv")
+# ft_gen <- ggplot(feats_gen, aes(x = Task, y = Correlation, 
+#                                 fill = factor(Method, levels = c("NTP", "LL")))) +
+#   geom_col(position = "dodge") + 
+#   labs(y = "Correlation with model–human similarity",
+#        fill = "Method") +
+#   scale_fill_manual(values = c("#3e7ff0", "#8eafe8"),
+#                     breaks = c("NTP", "LL"))
+# ggsave("feats_gen.png", plot = ft_gen, width = 1200, height = 950, unit = "px")

@@ -11,10 +11,6 @@ class FlavaEvalModel(EvalModel):
         self.image_model = image_model
         self.feature_extractor = feature_extractor
 
-        self.get_image_features = self.get_all_image_feats
-        self.get_text_features = self.get_all_text_feats
-        self.get_similarity_scores = self.get_all_sim_scores
-
     def get_all_image_feats(self, dataloader):
         """
         Gets image features from a dataloader and applies mean pooling to each set of image features.

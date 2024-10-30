@@ -138,10 +138,16 @@ ggsave("comparison/lex-vv-oc.png",
 vv_files <- c(list.files("evals/lex-viz_vocab", pattern = "*.npy"), "openclip/openclip_epoch_256.npy")
 
 other_res_vv <- lapply(vv_files, \(vvf) {
+  method <- "similarity"
   res <- np$load(here("evals/lex-viz_vocab", vvf)) |> 
     drop()
   if (length(dim(res)) == 3) {
     res <- (res[,,1] - res[,,2])
+    method <- "generation_response"
+  }
+  if (str_detect(vvf, "_logit")) {
+    vvf <- str_remove(vvf, "_logit")
+    method <- "generation_logit"
   }
   res <- res |> 
     as_tibble() |> 
@@ -153,6 +159,7 @@ other_res_vv <- lapply(vv_files, \(vvf) {
     pull(accuracy)
   kls <- compare_vv(res, human_data_vv) |> 
     mutate(model = vvf |> str_remove_all("vv_") |> str_remove_all(".npy"),
+           method = method,
            accuracy = acc)
 }) |> bind_rows() |> 
   mutate(model = str_replace_all(model, model_rename))

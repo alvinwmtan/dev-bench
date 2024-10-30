@@ -11,9 +11,6 @@ class ViltEvalModel(EvalModel):
         self.processor = processor
         self.vilt_base_model = vilt_base_model
         self.vilt_base_processor = vilt_base_processor
-        self.get_image_features = self.get_all_image_feats
-        self.get_text_features = self.get_all_text_feats
-        self.get_similarity_scores = self.get_all_sim_scores
 
     def get_all_sim_scores(self, dataloader):
         """
@@ -29,28 +26,18 @@ class ViltEvalModel(EvalModel):
         all_sims = []
         with torch.no_grad():
             for d in tqdm(dataloader, desc="Processing data"):
-                # Prepare inputs with padding and truncation
-                # Assuming each data point in the dataloader has multiple images and texts
                 num_images = len(d["images"])
                 num_texts = len(d["text"])
                 sims = np.zeros((num_images, num_texts))
 
                 for i, image in enumerate(d["images"]):
-                    #print(image)
-                    if image.mode != 'RGB':
-                        image = image.convert('RGB')
-                    #print(image.mode)
                     scores = {}
                     for j, text in enumerate(d["text"]):
-                        # Prepare inputs for each image-text pair
-                        #inputs = processor(images=image, text=text, return_tensors="pt", padding=True, truncation=True)
                         encoding = self.processor(image, text, return_tensors="pt")
-                        # Forward pass
                         outputs = self.model(**encoding)
                         scores[text] = outputs.logits[0, :].item()
                         sims[i, j] = scores[text]
 
-                # Append the similarity scores for this batch to all_sims
                 all_sims.append(sims)
         
         return np.stack(all_sims, axis=0)

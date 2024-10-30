@@ -6,9 +6,8 @@ parser = argparse.ArgumentParser(description='Evaluate a model on DevBench tasks
 parser.add_argument('model', type=str, help='model type')
 args = parser.parse_args()
 
-# # Load model
+# Load model
 model_type = args.model # "clip_base"
-
 
 if model_type == "clip_base":
     from model_classes.clip import ClipEvalModel
@@ -86,16 +85,20 @@ elif model_type == "cvcl":
 elif model_type == "siglip":
     from model_classes.siglip import SiglipEvalModel
     from transformers import AutoProcessor, AutoModel, AutoTokenizer
+
     eval_model = SiglipEvalModel(
         model = AutoModel.from_pretrained("google/siglip-so400m-patch14-384"),
-        processor = AutoProcessor.from_pretrained("google/siglip-so400m-patch14-384")
+        processor = AutoProcessor.from_pretrained("google/siglip-so400m-patch14-384"),
+        model_embed = AutoModel.from_pretrained("google/siglip-base-patch16-224"),
+        tokenizer = AutoTokenizer.from_pretrained("google/siglip-base-patch16-224"),
+        processor_embed = AutoProcessor.from_pretrained("google/siglip-base-patch16-224")
     )
 
 elif model_type == "llava":
     from model_classes.llava import LlavaEvalModel
     from transformers import AutoProcessor, AutoModelForPreTraining
     eval_model = LlavaEvalModel(
-        processor = AutoProcessor.from_pretrained("llava-hf/llava-v1.6-mistral-7b-hf"),
+        processor = AutoProcessor.from_pretrained("llava-hf/llava-v1.6-mistral-7b-hf", do_rescale=False),
         model = AutoModelForPreTraining.from_pretrained("llava-hf/llava-v1.6-mistral-7b-hf")
     )
 
@@ -106,64 +109,71 @@ elif model_type == "tinyllava":
         tokenizer = AutoTokenizer.from_pretrained('tinyllava/TinyLLaVA-Phi-2-SigLIP-3.1B'),
         model = AutoModelForCausalLM.from_pretrained("tinyllava/TinyLLaVA-Phi-2-SigLIP-3.1B", trust_remote_code=True)
     )
-    
-elif model_type == "kosmos":
-    from model_classes.kosmos import Kosmos2EvalModel
-    from transformers import AutoProcessor, Kosmos2ForConditionalGeneration
-    eval_model = Kosmos2EvalModel(model = Kosmos2ForConditionalGeneration.from_pretrained("microsoft/kosmos-2-patch14-224"),
-processor = AutoProcessor.from_pretrained("microsoft/kosmos-2-patch14-224"))
-    
+
 elif model_type == "cogvlm":
     from transformers import AutoModelForCausalLM, LlamaTokenizer
     from model_classes.cogvlm import CogVlmEvalModel
     import torch
-    eval_model = CogVlmEvalModel(tokenizer = LlamaTokenizer.from_pretrained('lmsys/vicuna-7b-v1.5'),
-                                 model = AutoModelForCausalLM.from_pretrained(
-    'THUDM/cogvlm-grounding-generalist-hf',
-    torch_dtype=torch.bfloat16,
-    low_cpu_mem_usage=True,
-    trust_remote_code=True
-).to('cuda').eval())
+    eval_model = CogVlmEvalModel(
+        tokenizer = LlamaTokenizer.from_pretrained('lmsys/vicuna-7b-v1.5'),
+        model = AutoModelForCausalLM.from_pretrained(
+            'THUDM/cogvlm-grounding-generalist-hf',
+            torch_dtype=torch.bfloat16,
+            trust_remote_code=True
+        ).eval()
+    )
 
+elif model_type == "kosmos":
+    from model_classes.kosmos import Kosmos2EvalModel
+    from transformers import AutoProcessor, Kosmos2ForConditionalGeneration
+    eval_model = Kosmos2EvalModel(
+        model = Kosmos2ForConditionalGeneration.from_pretrained("microsoft/kosmos-2-patch14-224"),
+        processor = AutoProcessor.from_pretrained("microsoft/kosmos-2-patch14-224")
+    )
+    
 elif model_type == "moondream":
     from model_classes.moondream import MoondreamEvalModel
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    import torch
-    eval_model = MoondreamEvalModel(tokenizer = AutoTokenizer.from_pretrained("vikhyatk/moondream2", revision="2024-05-20"),
-                                 model = AutoModelForCausalLM.from_pretrained(
-            "vikhyatk/moondream2",  revision="2024-05-20"
-        ).eval())
+    eval_model = MoondreamEvalModel(
+        tokenizer = AutoTokenizer.from_pretrained(
+            "vikhyatk/moondream2", 
+            trust_remote_code=True, 
+            revision="2024-05-20"
+        ),
+        model = AutoModelForCausalLM.from_pretrained(
+            "vikhyatk/moondream2", 
+            trust_remote_code=True, 
+            revision="2024-05-20"
+        ).eval()
+    )
 
 else:
     raise Exception(f"No implementation found for model '{model_type}'")
 
 
-
-#Lexical tasks
+# Lexical tasks
 lwl_ds = data_handling.DevBenchDataset("assets/lex-lwl/")
 lwl_dl = data_handling.make_dataloader(lwl_ds)
-print("getting all sim scores lwl")
-lwl_sims = eval_model.get_all_sim_scores(lwl_dl)
-np.save(f"evals/lex-lwl/lwl_{model_type}.npy", lwl_sims)
-
+lwl_sims = eval_model.get_all_sim_scores_rating(lwl_dl)
+np.save(f"evals/lex-lwl/lwl_rating_{model_type}.npy", lwl_sims)
 
 vv_ds = data_handling.DevBenchDataset("assets/lex-viz_vocab/")
 vv_dl = data_handling.make_dataloader(vv_ds)
-vv_sims = eval_model.get_all_sim_scores(vv_dl)
-np.save(f"evals/lex-viz_vocab/vv_{model_type}.npy", vv_sims)
+vv_sims = eval_model.get_all_sim_scores_rating(vv_dl)
+np.save(f"evals/lex-viz_vocab/vv_rating_{model_type}.npy", vv_sims)
 
 # Grammatical tasks
 trog_ds = data_handling.DevBenchDataset("assets/gram-trog/")
 trog_dl = data_handling.make_dataloader(trog_ds)
-trog_sims = eval_model.get_all_sim_scores(trog_dl)
-np.save(f"evals/gram-trog/trog_{model_type}.npy", trog_sims)
+trog_sims = eval_model.get_all_sim_scores_rating(trog_dl)
+np.save(f"evals/gram-trog/trog_rating_{model_type}.npy", trog_sims)
 
 wg_ds = data_handling.DevBenchDataset("assets/gram-winoground/")
 wg_dl = data_handling.make_dataloader(wg_ds)
-wg_sims = eval_model.get_all_sim_scores(wg_dl)
-np.save(f"evals/gram-winoground/wg_{model_type}.npy", wg_sims)
+wg_sims = eval_model.get_all_sim_scores_rating(wg_dl)
+np.save(f"evals/gram-winoground/wg_rating_{model_type}.npy", wg_sims)
 
-#Semantic tasks
+# Semantic tasks
 voc_ds = data_handling.DevBenchDataset("assets/sem-viz_obj_cat/")
 voc_dl = data_handling.make_dataloader(voc_ds)
 voc_embeds = eval_model.get_all_image_feats(voc_dl)

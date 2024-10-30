@@ -10,16 +10,5 @@ class BlipEvalModel(EvalModel):
         self.image_model = image_model
 
         self.get_image_features = self.image_model.get_image_features
-        self.get_all_text_feats = self.get_all_text_feats
+        self.get_textfeatures = self.image_model.get_text_features
         self.get_similarity_scores = lambda **x: self.model(**x).itm_score
-
-    def get_all_text_feats(self, data_loader):
-        all_text_feats = []
-        with torch.no_grad():
-            for d in tqdm(data_loader, desc="Processing data"):
-                inputs = self.processor(text=d["text"], padding=True, return_tensors="pt").to(self.device)
-                text_features = self.image_model.get_text_features(**inputs)
-                all_text_feats.append(text_features)
-
-        all_text_feats = torch.cat(all_text_feats, dim=0)
-        return all_text_feats
