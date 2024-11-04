@@ -15,7 +15,7 @@ For attribution and licensing reasons, not all assets and data are hosted within
 
 **(Lexical) Looking While Listening:** Assets are available in this repo. Assets from Adams et al. (2018) and Frank et al. (2016) were directly obtained from the original papers, while assets from Donnelly & Kidd (2021) were reconstructed to ensure licensing at least as permissible as CC-BY-NC-SA. Data are available in this repo; they were aggregated from data in the original papers.
 
-**(Lexical) Visual Vocabulary:** Assets are available from [OSF](https://osf.io/j3mn2/) (these are the same images as in the THINGS similarity task). Data are available in this repo.
+**(Lexical) Visual Vocabulary:** Assets are available from [OSF](https://osf.io/wb36u) (these are the same images as in the THINGS similarity task). Data are available in this repo.
 
 **(Grammatical) Test of Reception of Grammar:** Assets can be downloaded from the [LEVANTE repo](https://github.com/levante-framework/core-tasks/tree/main/assets/TROG/original) by running `sh assets/gram-trog/trog_dl.sh`. Data are available in this repo.
 
@@ -25,4 +25,4 @@ For attribution and licensing reasons, not all assets and data are hosted within
 
 **(Semantic) Visual Object Categorisation:** Assets are available in this repo. These were obtained either from Kiani et al. (2007) via Spriet et al. (2021), or reconstructed to ensure licensing at least as permissible as CC-BY-NC-SA. Data are also available in this repo, converted from SPSS files from the original paper.
 
-**(Semantic) THINGS Similarity:** Assets are available from [OSF](https://osf.io/j3mn2/). Data can be downloaded from [OSF](https://osf.io/w75eu); this should go into `evals/sem-things`.
+**(Semantic) THINGS Similarity:** Assets are available from [OSF](https://osf.io/wb36u). Data can be downloaded from [OSF](https://osf.io/w75eu); this should go into `evals/sem-things`.
